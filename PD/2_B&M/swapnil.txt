@@ -1,0 +1,181 @@
+#include <iostream>
+#include <ctime>    // For time functions
+#include <cstdlib>  // For rand() function
+#include <omp.h>    // OpenMP library for parallel computing
+
+using namespace std;
+
+// Function to perform bubble sort algorithm
+void bubbleSort(int arr[], int n)
+{
+    for (int i = 0; i < n - 1; ++i) // Loop through array elements
+    {
+        for (int j = 0; j < n - i - 1; ++j) // Compare adjacent elements
+        {
+            if (arr[j] > arr[j + 1]) // If out of order, swap
+            {
+                swap(arr[j], arr[j + 1]);
+            }
+        }
+    }
+}
+
+// Function to merge two sorted subarrays
+void merge(int arr[], int l, int m, int r)
+{
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 = r - m;
+
+    int *L = new int[n1]; // Temporary array for left subarray
+    int *R = new int[n2]; // Temporary array for right subarray
+
+    // Copy data to temporary arrays L[] and R[]
+    for (i = 0; i < n1; ++i)
+    {
+        L[i] = arr[l + i];
+    }
+    for (j = 0; j < n2; ++j)
+    {
+        R[j] = arr[m + 1 + j];
+    }
+
+    i = 0;
+    j = 0;
+    k = l;
+
+    // Merge the temporary arrays back into arr[l..r]
+    while (i < n1 && j < n2)
+    {
+        if (L[i] <= R[j]) // Compare elements of subarrays
+        {
+            arr[k] = L[i]; // Place smaller element into arr[]
+            ++i;
+        }
+        else
+        {
+            arr[k] = R[j];
+            ++j;
+        }
+        ++k;
+    }
+
+    // Copy the remaining elements of L[], if there are any
+    while (i < n1)
+    {
+        arr[k] = L[i];
+        ++i;
+        ++k;
+    }
+
+    // Copy the remaining elements of R[], if there are any
+    while (j < n2)
+    {
+        arr[k] = R[j];
+        ++j;
+        ++k;
+    }
+
+    // Free memory allocated for temporary arrays
+    delete[] L;
+    delete[] R;
+}
+
+// Function to perform merge sort algorithm
+void mergeSort(int arr[], int l, int r)
+{
+    if (l < r)
+    {
+        int m = l + (r - l) / 2;
+        #pragma omp parallel sections // Parallelize recursive calls
+        {
+            #pragma omp section
+            {
+                mergeSort(arr, l, m); // Sort left half
+            }
+            #pragma omp section
+            {
+                mergeSort(arr, m + 1, r); // Sort right half
+            }
+        }
+
+        merge(arr, l, m, r); // Merge sorted halves
+    }
+}
+
+// Function to print array elements
+void printArray(int arr[], int size)
+{
+    for (int i = 0; i < size; ++i)
+    {
+        cout << arr[i] << " ";
+    }
+    cout << endl;
+}
+
+int main()
+{
+    int n;
+    cout << "Enter the size of the array: ";
+    cin >> n;
+
+    int *arr = new int[n]; // Dynamically allocate memory for array
+    srand(time(0)); // Seed for random number generation
+
+    // Generate random numbers and fill the array
+    for (int i = 0; i < n; ++i)
+    {
+        arr[i] = rand() % 100; // Generate random numbers between 0 and 99
+    }
+
+    // Sequential Bubble Sort
+    clock_t start = clock(); // Start time measurement
+    bubbleSort(arr, n); // Sort array sequentially
+    clock_t end = clock(); // End time measurement
+
+    // Calculate time taken for sequential bubble sort
+    double sequentialBubbleTime = double(end - start) / CLOCKS_PER_SEC;
+
+    // Parallel Bubble Sort
+    start = clock(); // Start time measurement
+    #pragma omp parallel // Begin parallel region
+    {
+        bubbleSort(arr, n); // Sort array in parallel
+    }
+    end = clock(); // End time measurement
+
+    // Calculate time taken for parallel bubble sort
+    double parallelBubbleTime = double(end - start) / CLOCKS_PER_SEC;
+
+    // Merge Sort
+    start = clock(); // Start time measurement
+    mergeSort(arr, 0, n - 1); // Sort array sequentially
+    end = clock(); // End time measurement
+
+    // Calculate time taken for sequential merge sort
+    double sequentialMergeTime = double(end - start) / CLOCKS_PER_SEC;
+
+    // Parallel Merge Sort
+    start = clock(); // Start time measurement
+    #pragma omp parallel // Begin parallel region
+    {
+        #pragma omp single
+        {
+            mergeSort(arr, 0, n - 1); // Sort array in parallel
+        }
+    }
+    end = clock(); // End time measurement
+
+    // Calculate time taken for parallel merge sort
+    double parallelMergeTime = double(end - start) / CLOCKS_PER_SEC;
+
+    // Performance measurement
+    cout << "Sequential Bubble Sort Time: " << sequentialBubbleTime << " seconds" << endl;
+    cout << "Parallel Bubble Sort Time: " << parallelBubbleTime << " seconds" << endl;
+    cout << "Sequential Merge Sort Time: " << sequentialMergeTime << " seconds" << endl;
+    cout << "Parallel Merge Sort Time: " << parallelMergeTime << " seconds" << endl;
+
+    delete[] arr; // Free memory allocated for array
+
+    return 0;
+}

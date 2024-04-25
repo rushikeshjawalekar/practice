@@ -1,0 +1,116 @@
+#include <iostream>
+#include <vector>
+#include <omp.h>
+
+using namespace std;
+
+// Function to perform Bubble Sort
+void bubbleSort(vector<int>& arr) {
+    int n = arr.size();
+    bool swapped = true; // Flag to track if any swap occurred
+
+    // Continue iterating until no swap is performed
+    while (swapped) {
+        swapped = false; // Reset swapped flag
+
+        // Parallel loop for comparing adjacent elements
+        #pragma omp parallel for shared(arr, swapped)
+        for (int i = 0; i < n - 1; i++) {
+            if (arr[i] > arr[i + 1]) { // If current element is greater than next element
+                swap(arr[i], arr[i + 1]); // Swap them
+                swapped = true; // Set swapped flag to true
+            }
+        }
+    }
+}
+
+// Function to merge two sorted subarrays
+void merge(vector<int>& arr, int l, int m, int r) {
+    int n1 = m - l + 1; // Length of left subarray
+    int n2 = r - m; // Length of right subarray
+
+    // Create temporary arrays for left and right subarrays
+    vector<int> L(n1), R(n2);
+
+    // Copy data to temporary arrays
+    for (int i = 0; i < n1; i++)
+        L[i] = arr[l + i];
+    for (int j = 0; j < n2; j++)
+        R[j] = arr[m + 1 + j];
+
+    int i = 0, j = 0, k = l; // Initial indices for left, right, and merged arrays
+
+    // Merge the temporary arrays back into the original array
+    while (i < n1 && j < n2) {
+        if (L[i] <= R[j]) {
+            arr[k] = L[i]; // Copy from left subarray
+            i++;
+        } else {
+            arr[k] = R[j]; // Copy from right subarray
+            j++;
+        }
+        k++;
+    }
+
+    // Copy remaining elements of L[] if any
+    while (i < n1) {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+
+    // Copy remaining elements of R[] if any
+    while (j < n2) {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+}
+
+// Function to perform Merge Sort
+void mergeSort(vector<int>& arr, int l, int r) {
+    if (l < r) {
+        int m = l + (r - l) / 2; // Calculate mid index
+
+        // Divide array into two halves and sort them recursively
+        #pragma omp parallel sections
+        {
+            #pragma omp section
+            mergeSort(arr, l, m); // Sort left half
+            #pragma omp section
+            mergeSort(arr, m + 1, r); // Sort right half
+        }
+
+        // Merge the sorted halves
+        merge(arr, l, m, r);
+    }
+}
+
+// Main function
+int main() {
+    int n;
+    cout << "Enter the number of elements: ";
+    cin >> n;
+
+    // Input elements of the array
+    vector<int> arr(n);
+    cout << "Enter the elements: ";
+    for (int i = 0; i < n; i++)
+        cin >> arr[i];
+
+    // Sort the array using Bubble Sort
+    bubbleSort(arr);
+    cout << "Sorted array using Bubble Sort: ";
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << " ";
+    cout << endl;
+
+    // Sort the array using Merge Sort
+    mergeSort(arr, 0, n - 1);
+    cout << "Sorted array using Merge Sort: ";
+    for (int i = 0; i < n; i++)
+        cout << arr[i] << " ";
+    cout << endl;
+
+    return 0;
+}

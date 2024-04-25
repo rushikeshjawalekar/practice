@@ -1,0 +1,118 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <omp.h>
+
+using namespace std;
+
+// Structure representing a graph
+struct Graph {
+    int V; // Number of vertices
+    vector<vector<int> > adj; // Adjacency list
+
+    // Constructor to initialize the graph with V vertices
+    Graph(int V) {
+        this->V = V;
+        adj.resize(V); // Resize the adjacency list to V elements
+    }
+
+    // Function to add an edge between vertices u and v
+    void addEdge(int u, int v) {
+        // Adding edge from u to v
+        adj[u].push_back(v);
+        // Adding edge from v to u (assuming undirected graph)
+        adj[v].push_back(u);
+    }
+
+    // Breadth-First Search (BFS) traversal starting from a given start vertex
+    void BFS(int start) {
+        vector<bool> visited(V, false); // Initialize all vertices as not visited
+        queue<int> q; // Create a queue for BFS
+
+        visited[start] = true; // Mark the current node as visited and enqueue it
+        q.push(start);
+
+        // Loop until the queue is empty
+        while (!q.empty()) {
+            int u = q.front(); // Dequeue a vertex from the queue
+            q.pop();
+            cout << u << " "; // Print the dequeued vertex
+
+            // Get all adjacent vertices of the dequeued vertex u
+            // If an adjacent has not been visited, mark it visited and enqueue it
+            #pragma omp parallel for
+            for (int i = 0; i < adj[u].size(); i++) {
+                int v = adj[u][i];
+                if (!visited[v]) {
+                    #pragma omp critical // Ensuring atomic access to the visited array and queue
+                    {
+                        visited[v] = true;
+                        q.push(v);
+                    }
+                }
+            }
+        }
+        cout << endl;
+    }
+
+    // Depth-First Search (DFS) traversal starting from a given start vertex
+    void DFS(int start) {
+        vector<bool> visited(V, false); // Initialize all vertices as not visited
+
+        // Perform DFS traversal from the start vertex
+        #pragma omp parallel
+        {
+            #pragma omp single nowait // Start a single thread for DFS traversal
+            {
+                DFSUtil(start, visited);
+            }
+        }
+        cout << endl;
+    }
+
+    // Utility function for DFS traversal
+    void DFSUtil(int u, vector<bool>& visited) {
+        visited[u] = true; // Mark the current node as visited
+        cout << u << " "; // Print the current node
+
+        // Recur for all vertices adjacent to this vertex if they have not been visited
+        # pragma omp parallel for
+        for (int i = 0; i < adj[u].size(); i++) {
+            int v = adj[u][i];
+            if (!visited[v]) {
+                DFSUtil(v, visited); // Recursive call for DFS traversal
+            }
+        }
+    }
+};
+
+// Main function
+int main() {
+    int V;
+    cout << "Enter the number of vertices: ";
+    cin >> V;
+
+    Graph g(V); // Create a graph with V vertices
+
+    int edgeCount;
+    cout << "Enter the number of edges: ";
+    cin >> edgeCount;
+
+    cout << "Enter the edges (in format 'source destination'): \n";
+    // Input the edges of the graph
+    for (int i = 0; i < edgeCount; i++) {
+        int u, v;
+        cin >> u >> v;
+        g.addEdge(u, v); // Add an edge between vertices u and v
+    }
+
+    // Perform BFS traversal starting from node 0
+    cout << "BFS traversal starting from node 0: ";
+    g.BFS(0);
+
+    // Perform DFS traversal starting from node 0
+    cout << "DFS traversal starting from node 0: ";
+    g.DFS(0);
+
+    return 0;
+}

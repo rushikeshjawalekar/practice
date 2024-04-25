@@ -1,0 +1,72 @@
+#include <iostream>
+#include <omp.h> // OpenMP header
+#include <climits> // For INT_MIN and INT_MAX
+using namespace std;
+
+// Function to find the minimum value in the array using parallel reduction
+void min_reduction(int arr[], int n) {
+    int min_value = INT_MAX; // Initialize min_value with the maximum possible integer value
+    // OpenMP parallel for loop with reduction clause for finding the minimum value
+    #pragma omp parallel for reduction(min: min_value)
+    for (int i = 0; i < n; i++) {
+        if (arr[i] < min_value) {
+            min_value = arr[i]; // Update min_value if a smaller value is found
+        }
+    }
+    cout << "Minimum value: " << min_value << endl; // Output the minimum value
+}
+
+// Function to find the maximum value in the array using parallel reduction
+void max_reduction(int arr[], int n) {
+    int max_value = INT_MIN; // Initialize max_value with the minimum possible integer value
+    // OpenMP parallel for loop with reduction clause for finding the maximum value
+    #pragma omp parallel for reduction(max: max_value)
+    for (int i = 0; i < n; i++) {
+        if (arr[i] > max_value) {
+            max_value = arr[i]; // Update max_value if a larger value is found
+        }
+    }
+    cout << "Maximum value: " << max_value << endl; // Output the maximum value
+}
+
+// Function to calculate the sum of all elements in the array using parallel reduction
+void sum_reduction(int arr[], int n) {
+    int sum = 0; // Initialize sum to zero
+    // OpenMP parallel for loop with reduction clause for calculating the sum
+    #pragma omp parallel for reduction(+: sum)
+    for (int i = 0; i < n; i++) {
+        sum += arr[i]; // Accumulate the sum of elements
+    }
+    cout << "Sum: " << sum << endl; // Output the sum
+}
+
+// Function to calculate the average of all elements in the array using parallel reduction
+void average_reduction(int arr[], int n) {
+    int sum = 0; // Initialize sum to zero
+    // OpenMP parallel for loop with reduction clause for calculating the sum
+    #pragma omp parallel for reduction(+: sum)
+    for (int i = 0; i < n; i++) {
+        sum += arr[i]; // Accumulate the sum of elements
+    }
+    cout << "Average: " << (double)sum / n << endl; // Output the average
+}
+
+int main() {
+    int *arr, n; // Declare variables for array and its size
+    cout << "Enter total number of elements: ";
+    cin >> n; // Input the number of elements
+    arr = new int[n]; // Dynamically allocate memory for the array
+    cout << "Enter elements: ";
+    for (int i = 0; i < n; i++) {
+        cin >> arr[i]; // Input elements of the array
+    }
+
+    // Call functions to perform min, max, sum, and average operations using parallel reduction
+    min_reduction(arr, n);
+    max_reduction(arr, n);
+    sum_reduction(arr, n);
+    average_reduction(arr, n);
+
+    delete[] arr; // Free dynamically allocated memory for the array
+    return 0;
+}
