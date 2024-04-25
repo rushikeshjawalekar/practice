@@ -1,0 +1,92 @@
+1.What is Open Mp
+=
+OpenMP stands for Open Multi-Processing. It's a set of tools that helps programmers make their code run faster by splitting it up to run on multiple processors at the same time. Imagine you're making a big meal in the kitchen. Instead of doing all the cooking by yourself, you could have your friends help out. OpenMP works kind of like that, dividing up tasks among different parts of your computer's brain, called processors or cores. This helps your program finish its job much faster, just like how having many hands makes light work. So, people use OpenMP to speed up their programs and get things done quicker.
+
+2.What is parallel Reduction!
+=Parallel reduction is a technique used in computer science and parallel computing to simplify and speed up certain calculations. Imagine you have a big problem that can be broken down into smaller parts, and each part can be solved independently. That's where parallel reduction comes in handy.
+
+Here's a simple way to understand it:
+
+Breaking down the problem: Imagine you have a huge pile of papers to count. Instead of counting them all at once, you divide them into smaller piles.
+
+Independent processing: Each person can count one pile independently without waiting for others. 
+
+Similarly, in parallel reduction, each part of the problem can be worked on simultaneously by different processors or cores of a computer.
+Combining results: Once all the smaller piles are counted, you gather the results from each person and add them up to get the total count. 
+
+In parallel reduction, the results from each part are combined to solve the larger problem.
+
+
+
+code:
+
+#include <iostream>
+#include <vector>
+#include <omp.h>
+#include <climits>
+
+using namespace std;
+
+void min_reduction(vector<int>& arr) {
+  int min_value = INT_MAX;
+  #pragma omp parallel for reduction(min: min_value)
+  for (int i = 0; i < arr.size(); i++) {
+    if (arr[i] < min_value) {
+      min_value = arr[i];
+    }
+  }
+  cout << "Minimum value: " << min_value << endl;
+}
+
+void max_reduction(vector<int>& arr) {
+  int max_value = INT_MIN;
+  #pragma omp parallel for reduction(max: max_value)
+  for (int i = 0; i < arr.size(); i++) {
+    if (arr[i] > max_value) {
+      max_value = arr[i];
+    }
+  }
+  cout << "Maximum value: " << max_value << endl;
+}
+
+void sum_reduction(vector<int>& arr) {
+  int sum = 0;
+   #pragma omp parallel for reduction(+: sum)
+   for (int i = 0; i < arr.size(); i++) {
+    sum += arr[i];
+  }
+  cout << "Sum: " << sum << endl;
+}
+
+void average_reduction(vector<int>& arr) {
+  int sum = 0;
+  #pragma omp parallel for reduction(+: sum)
+  for (int i = 0; i < arr.size(); i++) {
+    sum += arr[i];
+  }
+  cout << "Average: " << (double)sum / arr.size() << endl;
+}
+
+int main() {
+  vector<int> arr;
+  arr.push_back(5);
+  arr.push_back(2);
+  arr.push_back(9);
+  arr.push_back(1);
+  arr.push_back(7);
+  arr.push_back(6);
+  arr.push_back(8);
+  arr.push_back(3);
+  arr.push_back(4);
+  arr.push_back(11);
+
+  min_reduction(arr);
+  max_reduction(arr);
+  sum_reduction(arr);
+  average_reduction(arr);
+}
+
+
+
+
+
